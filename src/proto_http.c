@@ -2433,6 +2433,66 @@ int http_wait_for_request(struct session *s, struct buffer *req, int an_bit)
 	/* transfer length unknown*/
 	txn->flags &= ~TX_REQ_XFER_LEN;
 
+        /* 4b: Insert header for tracing, if needed */
+        if (s->fe->do_unique_request_id) {
+                ctx.idx = 0;
+                const char hdr[] = "X-Unique-Request-Id";
+                const size_t hdr_len = sizeof(hdr);
+                if (! http_find_header2(hdr, hdr_len, msg->sol, &txn->hdr_idx, &ctx)) {
+                        const int max_counter = 1000 * 1000;   // fits in 32-bit signed int
+                        static int id_counter = max_counter;
+                        static char id_base[100];  // too lazy to figure out the exact minimum size needed
+                        if (id_counter >= max_counter) {
+                                /*
+                                 * We want the ids to be unique, so they need lots of
+                                 * entropy.  This is too expensive to do on every
+                                 * request.  So, do this every max_counter requests
+                                 * and append a counter per request.  I'm sure there
+                                 * are better ways to do this.
+                                 */
+                                long host_id;
+                                struct timeval tv;
+                                host_id = gethostid();
+                                gettimeofday(&tv, NULL);   // Not currently using tv_usec
+                                snprintf(id_base,
+                                         sizeof(id_base),
+                                         "%s: %X-%lX-",
+                                         hdr,
+                                         (unsigned int) host_id, 
+                                         tv.tv_sec);
+                                id_counter = 0;
+                        }
+                        char hdr_val[sizeof(id_base) + sizeof("1234567890")];  // enough digits for max_counter
+                        snprintf(hdr_val, sizeof(hdr_val), "%s%d", id_base, id_counter++);
+                        http_header_add_tail(req, &txn->req, &txn->hdr_idx, hdr_val);
+                }
+        }
+
+	/* 4c: we may need to enable ACT transaction type headers */
+	if (s->fe->do_act_transaction_type) {
+		ctx.idx = 0;
+		const char hdr[] = "X-ACT-Transaction-Type";
+		const size_t hdr_len = sizeof(hdr);
+		if (!http_find_header2(hdr, hdr_len, msg->sol, &txn->hdr_idx, &ctx)) {
+			static char hdr_val[1024]; // TODO: replace with max based on facts or expectations
+			char *uripath = http_get_path(txn);
+			if (uripath != NULL) {
+				int pathlen = txn->req.sl.rq.u_l +
+						(txn->req.sol + txn->req.sl.rq.u) - uripath;
+				++pathlen;
+				int maxcopy = pathlen < sizeof(hdr_val) ?
+						pathlen : sizeof(hdr_val);
+				snprintf(hdr_val, maxcopy, "%s", uripath);
+			} else {
+				snprintf(hdr_val, sizeof(hdr_val), "%s", "ErrorNoURIPath");
+			}
+
+			char hdr_full[sizeof(hdr_val) + sizeof(hdr) + 2];
+			snprintf(hdr_full, sizeof(hdr_full), "%s: %s", hdr, hdr_val);
+			http_header_add_tail(req, &txn->req, &txn->hdr_idx, hdr_full);
+		}
+	}
+
 	/* 5: we may need to capture headers */
 	if (unlikely((s->logs.logwait & LW_REQHDR) && txn->req.cap))
 		capture_headers(msg->sol, &txn->hdr_idx,

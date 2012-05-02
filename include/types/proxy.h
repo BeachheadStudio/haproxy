@@ -341,6 +341,8 @@ struct proxy {
 		struct eb_root used_listener_id;/* list of listener IDs in use */
 		struct eb_root used_server_id;	/* list of server IDs in use */
 	} conf;					/* config information */
+	int do_unique_request_id;	       	/* If true, turn on X-Unique-Request-Id processing */
+	int do_act_transaction_type;	       	/* If true, turn on X-ACT-Transaction-Type processing */
 	void *parent;				/* parent of the proxy when applicable */
 };
 

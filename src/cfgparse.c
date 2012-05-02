@@ -5217,6 +5217,12 @@ stats_error_parsing:
 			free(err);
 		}
 	}
+	else if (!strcmp(args[0], "unique-request-id")) { /* enable X-Unique-Request-Id processing */
+                curproxy->do_unique_request_id = 1;
+        }
+	else if (!strcmp(args[0], "act-transaction-type")) { /* enable X-ACT-Transaction-Type processing */
+                curproxy->do_act_transaction_type = 1;
+        }
 	else {
 		struct cfg_kw_list *kwl;
 		int index;
