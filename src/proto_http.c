@@ -2440,7 +2440,7 @@ int http_wait_for_request(struct session *s, struct buffer *req, int an_bit)
                 const size_t hdr_len = sizeof(hdr);
                 if (! http_find_header2(hdr, hdr_len, msg->sol, &txn->hdr_idx, &ctx)) {
                         const int max_counter = 1000 * 1000;   // fits in 32-bit signed int
-                        static int id_counter = max_counter;
+                        static int id_counter = 1000 * 1000;
                         static char id_base[100];  // too lazy to figure out the exact minimum size needed
                         if (id_counter >= max_counter) {
                                 /*

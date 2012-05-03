@@ -81,7 +81,7 @@ TARGET = linux26
 # Use CPU=<cpu_name> to optimize for a particular CPU, among the following
 # list :
 #    generic, native, i586, i686, ultrasparc, custom
-CPU = i686
+CPU =
 
 #### Architecture, used when not building for native architecture
 # Use ARCH=<arch_name> to force build for a specific architecture. Known
