@@ -75,20 +75,20 @@ DOCDIR = $(PREFIX)/doc/haproxy
 # following list (use the default "generic" if uncertain) :
 #    generic, linux22, linux24, linux24e, linux26, solaris,
 #    freebsd, openbsd, cygwin, custom
-TARGET =
+TARGET = linux26
 
 #### TARGET CPU
 # Use CPU=<cpu_name> to optimize for a particular CPU, among the following
 # list :
 #    generic, native, i586, i686, ultrasparc, custom
-CPU = generic
+CPU = i686
 
 #### Architecture, used when not building for native architecture
 # Use ARCH=<arch_name> to force build for a specific architecture. Known
 # architectures will lead to "-m32" or "-m64" being added to CFLAGS and
 # LDFLAGS. This can be required to build 32-bit binaries on 64-bit targets.
 # Currently, only 32, 64, x86_64, i386, i486, i586 and i686 are understood.
-ARCH =
+ARCH = x86_64
 
 #### Toolchain options.
 # GCC is normally used both for compiling and linking.
